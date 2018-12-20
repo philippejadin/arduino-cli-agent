@@ -1,7 +1,13 @@
 #!/usr/bin/python
+# very good tutorial for simple webserver here : https://www.acmesystems.it/python_http
+# and very good subprocess tutorial here : https://www.sharats.me/posts/the-ever-useful-and-neat-subprocess-module/
+
+
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from os import curdir, sep
 import cgi
+import subprocess
+
 
 PORT_NUMBER = 8080
 
@@ -13,7 +19,8 @@ class myHandler(BaseHTTPRequestHandler):
 	def do_GET(self):
 		if self.path=="/":
 			self.wfile.write("Hello world")
-			self.path="/index_example3.html"
+			self.wfile.write(subprocess.check_output(["./arduino-cli"]))
+
 
 		try:
 			#Check the file extension required and
