@@ -1,0 +1,43 @@
+<html>
+
+<body>
+  <h1>Compile and upload to arduino : example</h1>
+
+  <p>First run the agent then fill the form bellow and watch for the results.
+    This is also the recomended way to integrate agent in your application
+  </p>
+
+  <form method="post" action="http://localhost:3280">
+    <div>
+      <input type="text" name="board" value="uno" />
+    </div>
+    <div>
+      <input type="text" name="filename" value="mysketch" />
+    </div>
+    <div>
+      <textarea name="arduino_code" rows="20" cols="80">
+
+        // the setup function runs once when you press reset or power the board
+        void setup() {
+          // initialize digital pin LED_BUILTIN as an output.
+          pinMode(LED_BUILTIN, OUTPUT);
+        }
+
+        // the loop function runs over and over again forever
+        void loop() {
+          digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+          delay(1000);                       // wait for a second
+          digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+          delay(1000);                       // wait for a second
+        }
+      </textarea>
+    </div>
+    <div>
+      <input type="submit" value="Compile and upload"/>
+    </div>
+  </form>
+
+
+</body>
+
+</html>
