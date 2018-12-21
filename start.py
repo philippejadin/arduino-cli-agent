@@ -7,6 +7,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from os import curdir, sep
 import cgi
 import subprocess
+import string
 
 
 PORT_NUMBER = 3280
@@ -14,6 +15,10 @@ PORT_NUMBER = 3280
 #This class will handles any incoming request from
 #the browser
 class myHandler(BaseHTTPRequestHandler):
+
+
+	def write(self, text):
+		self.wfile.write(text)
 
 	#Handler for the GET requests
 	def do_GET(self):
@@ -38,13 +43,22 @@ class myHandler(BaseHTTPRequestHandler):
 			#self.wfile.write(form.getfirst("arduino_code"))
 
 			if "arduino_code" not in form or "board" not in form or "filename" not in form:
-			    self.wfile.write("<H1>Error</H1> Please fill in the arduino_code, board and filename fields.")
+			    self.write("<H1>Error</H1> Please fill in the arduino_code, board and filename fields.")
 			    return
 
-			#self.wfile.write("<p>name:", form["name"].value)
-			#self.wfile.write("<p>addr:", form["addr"].value)
 			# create a sketch
-			self.wfile.write(subprocess.check_output(["./arduino-cli", "sketch", "new", form["filename"].value]))
+		
+			sketch_name = form["filename"].value
+			process = subprocess.check_output(["./arduino-cli", "sketch", "new", sketch_name])
+			self.write(process)
+			sketch_path =  string.rstrip(string.replace(process, "Sketch created in: ", ""))
+			sketch_filename = sketch_path + "/" + sketch_name + ".ino"
+
+			self.write("Created sketch dir in " + sketch_filename )
+
+			sketch_file = open(sketch_filename, 'w')
+			sketch_file.write(form["arduino_code"].value);
+
 			# install the board is needed
 
 			# compile the sketch
@@ -53,7 +67,7 @@ class myHandler(BaseHTTPRequestHandler):
 
 
 
-			print form
+
 			#print "Got code to compile" + form["arduino_code"].value
 			#self.send_response(200)
 			#self.end_headers()
