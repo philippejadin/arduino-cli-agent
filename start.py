@@ -3,7 +3,7 @@
 # this got me started quick https://stackoverflow.com/questions/33662842/simple-python-server-to-process-get-and-post-requests-with-json
 
 
-from bottle import route, run, template, get, post, request, static_file, abort
+from bottle import route, run, template, get, post, request, static_file, abort, response
 import subprocess
 import sys
 import os
@@ -15,6 +15,17 @@ def log(s):
         print (s)
         print('-------------------')
 
+def error(message):
+    response.status = 400
+    response.content_type = 'application/json'
+    return {'error' : True, 'message' : message}
+
+def success(message):
+    response.status = 200
+    response.content_type = 'application/json'
+    return {'error' : False, 'message' : message}
+
+
 @route('/')
 def index():
     return static_file('index.html', './examples/')
@@ -23,9 +34,9 @@ def index():
 def index(name):
     return template('<b>Hello {{name}}</b>!', name=name)
 
-@route('/test')
+@route('/error')
 def index():
-    abort(500, "Compile failed, message returned is ")
+    return error("This is an error message")
 
 @route('/check')
 def index():
@@ -40,7 +51,7 @@ def index():
 @post('/compile')
 def index():
     if not request.forms.get('arduino_code') or not request.forms.get('board') or not request.forms.get('filename'):
-        abort(500, "Please provide in the arduino_code, board and filename fields.")
+        return error('Please provide the arduino_code, board and filename fields.')
 
     sketch_name = request.forms.get('filename')
 
@@ -68,12 +79,12 @@ def index():
     log (str(compile_process))
 
     if compile_process.returncode != 0:
-        abort(500, "Compilation failed, arduino-cli says : " + str(compile_process.stdout.decode()))
+        return error("Compilation failed, arduino-cli says : " + str(compile_process.stdout.decode()))
 
 
 
-    return 'Compilation suceeded'
-    
+    return success('Compilation suceeded')
+
 
 
 
