@@ -1,5 +1,8 @@
 build
 dist
-start.spec
+*.spec
 arduino-cli
 arduino-cli.exe
+sketches
+*.pyc
+__pycache__
