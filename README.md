@@ -1,6 +1,12 @@
 # arduino-cli-agent
 A simple server to allow local compilation and upload of sketches, using arduino-cli called from python
 
+# Install
+
+You need to download the arduino-cli binary for your platform (currently only tested on linux) from here: https://github.com/arduino/arduino-cli/
+
+Then rename it to arduino-cli and put it in the same directory as start.py
+
 # Usage
 Run python3 start.py
 
