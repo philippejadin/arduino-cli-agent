@@ -15,6 +15,10 @@ def log(s):
         print (s)
         print('-------------------')
 
+@route('/')
+def index():
+    return static_file('index.html', './examples/')
+
 @route('/hello/<name>')
 def index(name):
     return template('<b>Hello {{name}}</b>!', name=name)
@@ -22,10 +26,9 @@ def index(name):
 
 @route('/check')
 def index():
-
-    tmp = subprocess.run(["./arduino-cli", "compile", "--fqbn", "arduino:avr:uno", "/home/philippe/Sites/blocks/arduino-cli-agent/sketches/mysketcha"], stdout=subprocess.PIPE)
-    print (tmp)
-    return tmp.stdout
+    tmp = subprocess.run(["./arduino-cli"], stdout=subprocess.PIPE)
+    log (tmp)
+    return tmp.stdout.decode().replace('\n', '<br />')
 
 @route('/compile')
 def index():
