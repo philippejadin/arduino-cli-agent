@@ -30,6 +30,9 @@ def success(message):
     response.content_type = 'application/json'
     return {'error' : False, 'message' : message}
 
+def arduino_cli(command_line):
+    return subprocess.run(command_line,stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
+
 
 @route('/')
 def index():
@@ -80,7 +83,7 @@ def index():
     log(type(request.forms.get('board')))
     command_line = ["./arduino-cli", "compile", "--fqbn", str(request.forms.get('board')), str(sketch_path)]
     log(command_line)
-    compile_process = subprocess.run(command_line, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
+    compile_process = arduino_cli(command_line)
     log (str(compile_process))
 
     if compile_process.returncode != 0:
