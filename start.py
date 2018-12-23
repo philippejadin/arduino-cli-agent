@@ -30,8 +30,9 @@ def success(message):
     response.content_type = 'application/json'
     return {'error' : False, 'message' : message}
 
+# call the arduino-cli binary and return the process
 def arduino_cli(command_line):
-    return subprocess.run(command_line,stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
+    return subprocess.run(['./arduino-cli'] + command_line,stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
 
 
 @route('/')
@@ -48,7 +49,7 @@ def index():
 
 @route('/check')
 def index():
-    tmp = subprocess.run(["./arduino-cli"], stdout=subprocess.PIPE)
+    tmp = arduino_cli(['version'])
     log (tmp)
     return tmp.stdout.decode().replace('\n', '<br />')
 
@@ -58,8 +59,8 @@ def index():
 
 @post('/compile')
 def index():
-    if not request.forms.get('arduino_code') or not request.forms.get('board') or not request.forms.get('filename'):
-        return error('Please provide the arduino_code, board and filename fields.')
+    if not request.forms.get('arduino_code') or not request.forms.get('fqbn') or not request.forms.get('filename'):
+        return error('Please provide the arduino_code, fqbn and filename fields.')
 
     sketch_name = request.forms.get('filename')
 
@@ -81,7 +82,7 @@ def index():
 
     # Compile the sketch :
     log(type(request.forms.get('board')))
-    command_line = ["./arduino-cli", "compile", "--fqbn", str(request.forms.get('board')), str(sketch_path)]
+    command_line = ["compile", "--fqbn", str(request.forms.get('fqbn')), str(sketch_path)]
     log(command_line)
     compile_process = arduino_cli(command_line)
     log (str(compile_process))
@@ -89,10 +90,81 @@ def index():
     if compile_process.returncode != 0:
         return error("Compilation failed, arduino-cli says : " + str(compile_process.stdout.decode()))
 
+    # find a connected board. curently the first one found is used (most common use case)
+    find_process = arduino_cli(['board', 'list', '--format', 'json'])
+    if find_process.returncode != 0:
+        return error("Find a connected board failed, arduino-cli says : " + str(find_process.stdout.decode()))
+
+    port = 123
+
+    upload_process = arduino_cli('upload', '--port', port, "--fqbn", str(request.forms.get('fqbn'))
 
     return success('Compilation suceeded')
 
+@get('/board/list')
+def index():
+    command_line = ["board", "list", "--format", "json"]
+    process = arduino_cli(command_line)
+    log (str(process))
+    if process.returncode != 0:
+        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+    return (process.stdout.decode())
 
+@get('/board/listall')
+def index():
+    command_line = ["board", "listall", "--format", "json"]
+    process = arduino_cli(command_line)
+    log (str(process))
+    if process.returncode != 0:
+        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+
+    response.content_type = 'application/json'
+    return (process.stdout)
+
+@get('/core/install/<package>')
+def index(package):
+    command_line = ["core", "install", package]
+    process = arduino_cli(command_line)
+    log (str(process))
+    if process.returncode != 0:
+        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+
+    response.content_type = 'application/json'
+    return success(process.stdout.decode())
+
+@get('/core/list')
+def index():
+    command_line = ["core", "list", "--format", "json"]
+    process = arduino_cli(command_line)
+    log (str(process))
+    if process.returncode != 0:
+        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+
+    response.content_type = 'application/json'
+    return (process.stdout.decode())
+
+@get('/core/update-index')
+def index():
+    command_line = ["core", "update-index"]
+    process = arduino_cli(command_line)
+    log (str(process))
+    if process.returncode != 0:
+        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+
+    response.content_type = 'application/json'
+    return success(process.stdout.decode())
+
+
+
+# experimental catch all
+#@get('/<item>/<action>')
+#def index(item, action):
+#    command_line = [item, action]
+#    process = arduino_cli(command_line)
+#    log (str(process))
+#    if process.returncode != 0:
+#        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+#    return (process.stdout.decode())
 
 # warn python 3 only
 if sys.version_info[0] < 3:
