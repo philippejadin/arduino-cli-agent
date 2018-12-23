@@ -95,9 +95,9 @@ def index():
     if find_process.returncode != 0:
         return error("Find a connected board failed, arduino-cli says : " + str(find_process.stdout.decode()))
 
-    port = 123
+    port = '123'
 
-    upload_process = arduino_cli('upload', '--port', port, "--fqbn", str(request.forms.get('fqbn'))
+    upload_process = arduino_cli(['upload', '--port', port, "--fqbn", str(request.forms.get('fqbn'))])
 
     return success('Compilation suceeded')
 
