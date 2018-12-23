@@ -10,16 +10,21 @@ import os
 
 DEBUG = True
 
+# a few utility functions first
+
+# logs if debug is enabled
 def log(s):
     if DEBUG:
         print (s)
         print('-------------------')
 
+# returns a json formated error message
 def error(message):
     response.status = 400
     response.content_type = 'application/json'
     return {'error' : True, 'message' : message}
 
+# returns a json formated success message
 def success(message):
     response.status = 200
     response.content_type = 'application/json'
@@ -82,13 +87,14 @@ def index():
         return error("Compilation failed, arduino-cli says : " + str(compile_process.stdout.decode()))
 
 
-
     return success('Compilation suceeded')
 
 
 
-
+# warn python 3 only
 if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
+
+# start the server in a forever loop
 run(host='localhost', port=3280, debug=True, reloader=True)
