@@ -2,13 +2,16 @@
 
 # this got me started quick https://stackoverflow.com/questions/33662842/simple-python-server-to-process-get-and-post-requests-with-json
 
-
 from bottle import Bottle, route, run, template, get, post, request, static_file, abort, response
 import subprocess
 import sys
 import os
 
+import json
+
+
 DEBUG = True
+
 
 # a few utility functions first
 
@@ -91,13 +94,19 @@ def index():
         return error("Compilation failed, arduino-cli says : " + str(compile_process.stdout.decode()))
 
     # find a connected board. curently the first one found is used (most common use case)
-    find_process = arduino_cli(['board', 'list', '--format', 'json'])
-    if find_process.returncode != 0:
-        return error("Find a connected board failed, arduino-cli says : " + str(find_process.stdout.decode()))
+    board_list_process = arduino_cli(['board', 'list', '--format', 'json'])
+    if board_list_process.returncode != 0:
+        return error("Find a connected board failed, arduino-cli says : " + str(board_list_process.stdout.decode()))
 
-    port = '123'
+    # Currently we use the first detected port. Needs to be better implemented
+    boards = json.loads(board_list_process.stdout)
+    port = (boards['serialBoards'][0]['port'])
 
-    upload_process = arduino_cli(['upload', '--port', port, "--fqbn", str(request.forms.get('fqbn'))])
+
+    upload_process = arduino_cli(['upload', '--port', port, "--fqbn", str(request.forms.get('fqbn')), str(sketch_path)])
+    if upload_process.returncode != 0:
+        return error("Upload failed, arduino-cli says : " + str(upload_process.stdout.decode()))
+
 
     return success('Compilation suceeded')
 
@@ -108,6 +117,8 @@ def index():
     log (str(process))
     if process.returncode != 0:
         return error("Error, arduino-cli says : " + str(process.stdout.decode()))
+
+
     return (process.stdout.decode())
 
 @get('/board/listall')
@@ -169,6 +180,12 @@ def index():
 # warn python 3 only
 if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
+
+
+
+
+
+
 
 
 
