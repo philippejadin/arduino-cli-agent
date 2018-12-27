@@ -2,7 +2,7 @@
 
 # this got me started quick https://stackoverflow.com/questions/33662842/simple-python-server-to-process-get-and-post-requests-with-json
 
-from bottle import route, run, template, request, post, get, static_file
+from bottle import route, run, template, request, post, get, static_file, response
 import subprocess
 import sys
 import os
@@ -21,6 +21,7 @@ def log(s):
     if DEBUG:
         print (s)
         print('-------------------')
+        console.append('-------------------------')
         console.append(s)
 
 # returns a json formated error message
@@ -192,12 +193,15 @@ def start_server():
     run(host='localhost', port=3280, debug=True, reloader=False)
 
 
-if __name__ == '__main__':
-    threading.Thread(target=start_server).start()
 
-# start the gui
-app = guizero.App(title="Arduino Blockly Agent")
-text = guizero.Text(app, text="Console output : ")
-#button = guizero.PushButton(app, command=hello, text="Start the server")
-console = guizero.TextBox(app, width=40, height=10, multiline=True, scrollbar=True)
-app.display()
+
+if __name__ == '__main__':
+    # start the gui
+    app = guizero.App(title="Arduino Blockly Agent")
+    text = guizero.Text(app, text="Console output : ")
+    #button = guizero.PushButton(app, command=hello, text="Start the server")
+    console = guizero.TextBox(app, width=40, height=10, multiline=True, scrollbar=True)
+
+    threading.Thread(target=start_server).start()
+    app.display()
+    log('server started')
