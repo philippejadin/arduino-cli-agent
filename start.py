@@ -2,7 +2,7 @@
 
 # this got me started quick https://stackoverflow.com/questions/33662842/simple-python-server-to-process-get-and-post-requests-with-json
 
-from bottle import route, run, template, request, post, get, static_file, response
+from bottle import WSGIRefServer, route, run, template, request, post, get, static_file, response
 import subprocess
 import sys
 import os
@@ -21,6 +21,7 @@ def log(s):
     if DEBUG:
         print (s)
         print('-------------------')
+        #if console:
         console.append('-------------------------')
         console.append(s)
 
@@ -40,6 +41,35 @@ def success(message):
 def arduino_cli(command_line):
     return subprocess.run(['./arduino-cli'] + command_line,stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
 
+# server class to allow shutdown of bottle server, see https://stackoverflow.com/questions/11282218/bottle-web-framework-how-to-stop
+class MyServer(WSGIRefServer):
+    def run(self, app): # pragma: no cover
+        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
+        from wsgiref.simple_server import make_server
+        import socket
+
+        class FixedHandler(WSGIRequestHandler):
+            def address_string(self): # Prevent reverse DNS lookups please.
+                return self.client_address[0]
+            def log_request(*args, **kw):
+                if not self.quiet:
+                    return WSGIRequestHandler.log_request(*args, **kw)
+
+        handler_cls = self.options.get('handler_class', FixedHandler)
+        server_cls  = self.options.get('server_class', WSGIServer)
+
+        if ':' in self.host: # Fix wsgiref for IPv6 addresses.
+            if getattr(server_cls, 'address_family') == socket.AF_INET:
+                class server_cls(server_cls):
+                    address_family = socket.AF_INET6
+
+        srv = make_server(self.host, self.port, app, server_cls, handler_cls)
+        self.srv = srv ### THIS IS THE ONLY CHANGE TO THE ORIGINAL CLASS METHOD!
+        srv.serve_forever()
+
+    def shutdown(self): ### ADD SHUTDOWN METHOD.
+        self.srv.shutdown()
+        # self.server.server_close()
 
 @route('/')
 def index():
@@ -185,23 +215,26 @@ if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
 
-def hello():
-    button.text = 'hello'
-
 
 def start_server():
-    run(host='localhost', port=3280, debug=True, reloader=False)
+    log('Starting server')
+    run(server=server)
 
 
+def quit():
+    log('exit')
+    app.destroy()
+    server.shutdown()
 
 
 if __name__ == '__main__':
     # start the gui
     app = guizero.App(title="Arduino Blockly Agent")
     text = guizero.Text(app, text="Console output : ")
-    #button = guizero.PushButton(app, command=hello, text="Start the server")
+    button = guizero.PushButton(app, command=quit, text="Quit")
     console = guizero.TextBox(app, width=40, height=10, multiline=True, scrollbar=True)
 
+    # start the server
+    server = MyServer(host="localhost", port=3280, debug=True, reloader=False)
     threading.Thread(target=start_server).start()
     app.display()
-    log('server started')
