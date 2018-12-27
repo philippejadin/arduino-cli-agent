@@ -2,12 +2,13 @@
 
 # this got me started quick https://stackoverflow.com/questions/33662842/simple-python-server-to-process-get-and-post-requests-with-json
 
-from bottle import Bottle, route, run, template, get, post, request, static_file, abort, response
+from bottle import route, run, template, request, post, get, static_file
 import subprocess
 import sys
 import os
-
 import json
+import guizero
+import threading
 
 
 DEBUG = True
@@ -20,6 +21,7 @@ def log(s):
     if DEBUG:
         print (s)
         print('-------------------')
+        console.append(s)
 
 # returns a json formated error message
 def error(message):
@@ -182,12 +184,20 @@ if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
 
+def hello():
+    button.text = 'hello'
 
 
+def start_server():
+    run(host='localhost', port=3280, debug=True, reloader=False)
 
 
+if __name__ == '__main__':
+    threading.Thread(target=start_server).start()
 
-
-
-# start the server in a forever loop
-run(host='localhost', port=3280, debug=True, reloader=True)
+# start the gui
+app = guizero.App(title="Arduino Blockly Agent")
+text = guizero.Text(app, text="Console output : ")
+#button = guizero.PushButton(app, command=hello, text="Start the server")
+console = guizero.TextBox(app, width=40, height=10, multiline=True, scrollbar=True)
+app.display()
