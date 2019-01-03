@@ -1,0 +1,21 @@
+{
+  "name": "arduino-cli-agent",
+  "version": "0.1.0",
+  "description": "A simple server to allow local compilation and upload of sketches, using arduino-cli called from python",
+  "main": "start.js",
+  "dependencies": {
+    "arduino-cli": "^0.26.0"
+  },
+  "devDependencies": {},
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philippejadin/arduino-cli-agent.git"
+  },
+  "author": "",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/philippejadin/arduino-cli-agent/issues"
+  },
+  "homepage": "https://github.com/philippejadin/arduino-cli-agent#readme"
+}
