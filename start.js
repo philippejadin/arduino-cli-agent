@@ -1,60 +1,109 @@
 var express = require('express');
-var session = require('cookie-session'); // Charge le middleware de sessions
-var bodyParser = require('body-parser'); // Charge le middleware de gestion des paramètres
-var arduino_cli = require('arduino-cli').default;
-
-var urlencodedParser = bodyParser.urlencoded({
-  extended: false
-});
-
-
+var os = require('os');
+var arduino_cli_wrapper = require('arduino-cli').default;
 var app = express();
 
+port = 3280;
 
-console.log (arduino_cli);
+console.log('Starting arduino-cli-server on http://localhost:' + port);
 
-const cli = arduino_cli('./arduino-cli', {
-  arduino_data: '~/arduino-cli/data',
-  sketchbook_path: '~/arduino-cli/sketches',
+// initialize arduino cli
+if (process.platform === "win32") {
+  arduino_cli_binary = '.\\arduino-cli\\arduino-cli.exe';
+} else {
+  arduino_cli_binary = './arduino-cli/arduino-cli';
+}
+
+// Those folders are the default for arduino IDE so boards, libraries and sketches are synced with arduino ide
+// You might want this or not TODO make it configurable
+const arduino_data = os.homedir() + '/.arduino15';
+const sketchbook_path = os.homedir() + '/Arduino';
+
+
+const arduino_cli = arduino_cli_wrapper(arduino_cli_binary, {
+  arduino_data: arduino_data,
+  sketchbook_path: sketchbook_path
 });
 
 
-cli.version().then(console.log); // "0.2.1-alpha.preview"
+app.get('*', function(req, res, next) {
+  // This middleware throws an error, so Express will go straight to
+  // the next error handler
+  throw new Error('woops');
+});
+
+// this does the heavy duty
+// port and fqbn can be set as 'auto',
+// in this case the tool will try to guess from the first connected board, yeah!
+function compileAndUpload(code, port, fqbn) {
+//  throw new Error('fourte');
+  /*
+  // create sketch
+  cli.createSketch(sketchName).then(function(sketchPath) {
+      console.log('Sketche created in ' + sketchPath);
+
+      fs.writeFile(sketchPath, code, function(err) {
+        if (err) {
+          console.log(err);
+          throw new Error(err);
+        }
+      });
+
+      // compile sketch
+      cli.compile(function(progress) {}, fqbn, sketchName).then(function(result) {
+          console.log('Compiled successfuly');
+          console.log(result)
+          log('Compiled successfuly');
+          // upload sketch
+          cli.upload(function(progress) {}, port, fqbn, sketchName).then(function(result) {
+            console.log('Uploaded successfuly');
+            console.log(result);
+            log('Uploaded successfuly');
+          }, function(err) {
+            console.error(err); // upload error
+          });
+        },
+        function(err) {
+          console.error(err); // compile error
+        });
+    },
+    function(err) {
+      console.error(err); // create sketch error
+    });
+    */
+}
 
 
+app.get('/', function(req, res) {
+  res.setHeader('Content-Type', 'text/plain');
+  res.send('welcome to arduino-cli-server');
+});
+
+/*
+app.get('/compile', function(req, res) {
+      res.setHeader('Content-Type', 'application/json');
+      res.send(JSON.stringify({
+        'message': 'welcome'
+      }));
+      */
 
 
-
-/* On affiche la todolist et le formulaire */
-.get('/todo', function(req, res) {
-  res.render('todo.ejs', {
-    todolist: req.session.todolist
+app.use(function(error, req, res, next) {
+  // Any request to this server will get here, and will send an HTTP
+  // response with the error message 'woops'
+  res.json({
+    error: true,
+    message: error.message
   });
-})
+});
 
 
-/* On ajoute un élément à la todolist */
-.post('/todo/ajouter/', urlencodedParser, function(req, res) {
-  if (req.body.newtodo != '') {
-    req.session.todolist.push(req.body.newtodo);
-  }
-  res.redirect('/todo');
-})
+try {
+  compileAndUpload('code', 'port', 'fqbn');
+} catch (e) {
+  console.error(e)
+}
 
 
-/* Supprime un élément de la todolist */
-.get('/todo/supprimer/:id', function(req, res) {
-  if (req.params.id != '') {
-    req.session.todolist.splice(req.params.id, 1);
-  }
-  res.redirect('/todo');
-})
 
-
-/* On redirige vers la todolist si la page demandée n'est pas trouvée */
-
-.use(function(req, res, next) {
-  res.redirect('/todo');
-})
-
-.listen(8080);
+app.listen(port);
