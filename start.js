@@ -9,10 +9,13 @@ console.log('Starting arduino-cli-server on http://localhost:' + port);
 
 // initialize arduino cli
 if (process.platform === "win32") {
-  arduino_cli_binary = '.\\arduino-cli\\arduino-cli.exe';
+  arduino_cli_binary = '.\\arduino-cli\\arduino-arduino_cli.exe';
 } else {
   arduino_cli_binary = './arduino-cli/arduino-cli';
 }
+
+// TODO download arduino cli if not found
+
 
 // Those folders are the default for arduino IDE so boards, libraries and sketches are synced with arduino ide
 // You might want this or not TODO make it configurable
@@ -26,20 +29,13 @@ const arduino_cli = arduino_cli_wrapper(arduino_cli_binary, {
 });
 
 
-app.get('*', function(req, res, next) {
-  // This middleware throws an error, so Express will go straight to
-  // the next error handler
-  throw new Error('woops');
-});
-
 // this does the heavy duty
 // port and fqbn can be set as 'auto',
 // in this case the tool will try to guess from the first connected board, yeah!
 function compileAndUpload(code, port, fqbn) {
-//  throw new Error('fourte');
-  /*
+
   // create sketch
-  cli.createSketch(sketchName).then(function(sketchPath) {
+  arduino_cli.createSketch(sketchName).then(function(sketchPath) {
       console.log('Sketche created in ' + sketchPath);
 
       fs.writeFile(sketchPath, code, function(err) {
@@ -50,27 +46,27 @@ function compileAndUpload(code, port, fqbn) {
       });
 
       // compile sketch
-      cli.compile(function(progress) {}, fqbn, sketchName).then(function(result) {
+      arduino_cli.compile(function(progress) {}, fqbn, sketchName).then(function(result) {
           console.log('Compiled successfuly');
           console.log(result)
           log('Compiled successfuly');
           // upload sketch
-          cli.upload(function(progress) {}, port, fqbn, sketchName).then(function(result) {
+          arduino_cli.upload(function(progress) {}, port, fqbn, sketchName).then(function(result) {
             console.log('Uploaded successfuly');
             console.log(result);
             log('Uploaded successfuly');
           }, function(err) {
-            console.error(err); // upload error
+            throw new Error(err); // upload error
           });
         },
         function(err) {
-          console.error(err); // compile error
+          throw new Error(err); // compile error
         });
     },
     function(err) {
-      console.error(err); // create sketch error
+      throw new Error(err); // create sketch error
     });
-    */
+
 }
 
 
@@ -79,13 +75,14 @@ app.get('/', function(req, res) {
   res.send('welcome to arduino-cli-server');
 });
 
-/*
+
 app.get('/compile', function(req, res) {
-      res.setHeader('Content-Type', 'application/json');
-      res.send(JSON.stringify({
-        'message': 'welcome'
-      }));
-      */
+  res.setHeader('Content-Type', 'application/json');
+  res.json({
+    'message': 'welcome'
+  })
+});
+
 
 
 app.use(function(error, req, res, next) {
@@ -100,8 +97,8 @@ app.use(function(error, req, res, next) {
 
 try {
   compileAndUpload('code', 'port', 'fqbn');
-} catch (e) {
-  console.error(e)
+} catch (err) {
+  console.error('Error : ' + err.message)
 }
 
 
