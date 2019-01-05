@@ -3,7 +3,6 @@ dist
 *.spec
 arduino-cli
 arduino-cli.exe
-sketches
 *.pyc
 __pycache__
 node_modules

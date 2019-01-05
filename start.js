@@ -2,8 +2,13 @@ var express = require('express')
 const bodyParser = require('body-parser')
 var os = require('os')
 var fs = require('fs')
-var arduino_cli_wrapper = require('arduino-cli').default
+const path = require('path');
+
+
 var app = express()
+var child_process = require('child_process')
+
+
 // Tell express to use the body-parser middleware and to not parse extended bodies
 app.use(bodyParser.urlencoded({
   extended: false
@@ -35,11 +40,6 @@ function error(message, details) {
 }
 
 
-// general error handler
-var errHandler = function(err) {
-  error(err)
-}
-
 console.clear()
 
 
@@ -47,9 +47,9 @@ log('Starting arduino-cli-server on http://localhost:' + serverport)
 
 // initialize arduino cli
 if (process.platform === "win32") {
-  arduino_cli_binary = '.\\arduino-cli\\arduino-arduino_cli.exe'
+  arduino_cli_binary = '.' + path.sep + 'arduino-cli' + path.sep + 'arduino-cli.exe'
 } else {
-  arduino_cli_binary = './arduino-cli'
+  arduino_cli_binary = path.join(__dirname, 'arduino-cli', 'arduino-cli')
 }
 
 // TODO download arduino cli if not found
@@ -61,54 +61,35 @@ const arduino_data = os.homedir() + '/.arduino15'
 const sketchbook_path = os.homedir() + '/Arduino'
 
 
-const arduino_cli = arduino_cli_wrapper(arduino_cli_binary, {
-  arduino_data: arduino_data,
-  sketchbook_path: sketchbook_path
-})
-
-
 function arduino_cli(command_line) {
-  return child_process.execSync(arduino_cli_binary, command_line)
+  return child_process.execSync(arduino_cli_binary + ' ' + command_line.join(' ')).toString()
 }
 
-command_line = ["board", "list", "--format", "json"]
-process = arduino_cli(command_line)
-log(str(process))
 
-
-
-/*
-// TODO / explore this https://developers.google.com/web/fundamentals/primers/promises#promises_arrive_in_javascript
-var findConnectedBoard = new Promise(function(resolve, reject) {
-  // do a thing, possibly async, then…
-
-  if (// everything was fine) {
-    resolve("Stuff worked!");
-  }
-  else {
-    reject(Error("It broke"));
-  }
-});
-*/
 
 
 function findConnectedBoard() {
-  arduino_cli.listConnectedBoards().then(function(result) {
-    result.forEach(function(board) {
-      log('Board ' + board.name + ' found on port ' + board.port);
-    })
-    if (result.length == 0) {
-      error('No board found, please connect one and restart app');
-    }
-    if (result.length > 1) {
-      log('More than one board found, will use the first found in automatic mode');
-    }
-    detected_fqbn = result[0].fqbn
-    detected_port = result[0].port
-  }, function(error) {
-    error(error)
+  result = JSON.parse(arduino_cli(["board", "list", "--format", "json"]))
+
+  result.serialBoards.forEach(function(board) {
+    log('Board ' + board.name + ' found on port ' + board.port);
   })
+  if (result.serialBoards.length == 0) {
+    error('No board found, please connect one and rescan');
+  }
+  if (result.serialBoards.length > 0) {
+    detected_fqbn = result.serialBoards[0].fqbn
+    detected_port = result.serialBoards[0].port
+  }
+  if (result.serialBoards.length > 1) {
+    log('More than one board found, will use the first found in automatic mode');
+  }
+
+
+  return result
+
 }
+
 
 
 
@@ -117,35 +98,28 @@ function findConnectedBoard() {
 // in this case the tool will try to guess from the first connected board, yeah!
 function compileAndUpload(sketchName, code, port, fqbn) {
 
-  // create sketch
-  arduino_cli.createSketch(sketchName).then(function(sketchPath) {
-      log('Sketch created in ' + sketchPath)
-      fs.writeFileSync(sketchPath, code)
+  // create sketch would be like this if using cli :
+  //result = arduino_cli(["sketch", "new", sketchName])
+  // but let's just create it inside our own ./sketches directory for now
 
-      // compile sketch
-      arduino_cli.compile(function(progress) {}, fqbn, sketchName).then(
-        function(result) {
-          log('Compiled successfuly')
-          debug(result)
+  sketchPath = path.join(__dirname, 'sketches', sketchName, path.sep)
 
-          // upload sketch
-          arduino_cli.upload(function(progress) {}, port, fqbn, sketchName).then(
-            function(result) {
-              log('Uploaded successfuly')
-              debug(result)
-              return result
-            },
-            function(err) {
-              error('Upload failed', err)
-            })
-        },
-        function(err) {
-          error('Compile failed', err)
-        })
-    },
-    function(err) {
-      error('Create sketch failed', err)
-    })
+  if (!fs.existsSync(sketchPath)) {
+    fs.mkdirSync(sketchPath);
+  }
+
+  sketchFilename = sketchPath + sketchName + '.ino'
+  fs.writeFileSync(sketchFilename, code)
+  log('Sketch created');
+
+  result = arduino_cli(["compile", "--fqbn", fqbn, sketchPath])
+  log('Sketch compiled');
+
+  result = arduino_cli(["upload", "--fqbn", fqbn, '--port', port, sketchPath])
+  log('Sketch uploaded');
+
+  return result
+
 }
 
 
@@ -168,92 +142,61 @@ app.get('/compile', function(req, res) {
 app.post('/compile', function(req, res) {
   // todo validate !!!
   sketchName = req.body.filename
-  code = req.body.code
+  code = req.body.arduino_code
   port = req.body.port || detected_port
   fqbn = req.body.fqbn || detected_fqbn
 
-  Promise.all([arduino_cli.createSketch(sketchName), arduino_cli.compile(function(progress) {}, fqbn, sketchName), arduino_cli.upload(function(progress) {}, port, fqbn, sketchName)])
-    .then(function(result) {
-        log('Uploaded successfuly')
-        debug(result)
-        /*
-        res.setHeader('Content-Type', 'application/json')
-        res.json({
-          'error': false,
-          'details': result
-        })*/
-      },
-      function(error) {
-        log(error)
-      })
-})
-/*
-  arduino_cli.createSketch(sketchName)
-    .then(arduino_cli.compile(function(progress) {}, fqbn, sketchName))
-    .then(arduino_cli.upload(function(progress) {}, port, fqbn, sketchName))
-    .then(function(result) {
-      log('Uploaded successfuly')
-      debug(result)
-      res.setHeader('Content-Type', 'application/json')
-      res.json({
-        'error': false,
-        'details': result
-      })
+  try {
+    result = compileAndUpload(sketchName, code, port, fqbn)
+
+    res.setHeader('Content-Type', 'application/json')
+    res.json({
+      'error': false,
+      'details': result
     })
-    .catch(function(err) {
-      error('Upload and compile failed', err)
-      res.setHeader('Content-Type', 'application/json')
-      res.json({
-        'error': true,
-        'details': err
-      })
+  } catch (err) {
+    res.setHeader('Content-Type', 'application/json')
+    res.json({
+      'error': true,
+      'details': err.toString()
     })
+    log(err.toString())
+  }
 
 })
-*/
+
 
 
 
 
 
 app.get('/listconnectedboards', function(req, res) {
-  arduino_cli.listConnectedBoards().then(function(result) {
-    if (result.length > 0) {
-      res.setHeader('Content-Type', 'application/json')
-      res.json({
-        'error': false,
-        'count': result.length,
-        'boards': result
-      })
-    } else {
-      res.json({
-        'count': 0,
-        'error': false,
-        'message': 'No connected boards found'
-      })
-    }
-
-  }, function(error) {
+  result = findConnectedBoard()
+  if (result.length > 0) {
     res.setHeader('Content-Type', 'application/json')
     res.json({
-      'error': true,
-      'message': 'Failed to list connected boards',
-      'details': error
+      'error': false,
+      'count': result.length,
+      'boards': result
     })
-  })
+  } else {
+    res.json({
+      'count': 0,
+      'error': false,
+      'message': 'No connected boards found'
+    })
+  }
 })
 
-
-// this is needed because I don't know what I'm doing :-)
-process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at:', reason.stack || reason)
-  // Recommended: send the information to sentry.io
-  // or whatever crash reporting service you use
-})
-
-
-// get a list of connected boards
-findConnectedBoard()
 
 // start server
 app.listen(serverport)
+
+
+// find connected boards
+log('Searching connected boards')
+try {
+  findConnectedBoard()
+} catch (err) {
+  error('findConnectedBoard failed', err.message);
+}
