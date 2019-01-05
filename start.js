@@ -1,23 +1,21 @@
-var express = require('express')
-const bodyParser = require('body-parser')
-var os = require('os')
-var fs = require('fs')
+const express = require('express') // web server
+const bodyParser = require('body-parser') // parse html forms
+const os = require('os')
+const fs = require('fs')
 const path = require('path');
+const child_process = require('child_process')
+
+const app = express()
 
 
-var app = express()
-var child_process = require('child_process')
-
-
-// Tell express to use the body-parser middleware and to not parse extended bodies
-app.use(bodyParser.urlencoded({
-  extended: false
-}))
+///////////////////////// CONFIG  ////////////////////
 
 
 serverport = 3280
 detected_port = false
 detected_fqbn = false
+
+///////////////////////// UTILITIES ////////////////////
 
 // use the following instead of console log
 function log(message) {
@@ -40,16 +38,13 @@ function error(message, details) {
 }
 
 
-console.clear()
-
-
-log('Starting arduino-cli-server on http://localhost:' + serverport)
+////////////////// ARDUINO-CLI FUNCTIONS / COMMUNICATION ///////////////
 
 // initialize arduino cli
 if (process.platform === "win32") {
-  arduino_cli_binary = '.' + path.sep + 'arduino-cli' + path.sep + 'arduino-cli.exe'
+  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli.exe')
 } else {
-  arduino_cli_binary = path.join(__dirname, 'arduino-cli', 'arduino-cli')
+  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli')
 }
 
 // TODO download arduino cli if not found
@@ -123,6 +118,13 @@ function compileAndUpload(sketchName, code, port, fqbn) {
 }
 
 
+///////////////////////// SERVER ROUTES ////////////////////
+
+// Tell express to use the body-parser middleware and to not parse extended bodies
+app.use(bodyParser.urlencoded({
+  extended: false
+}))
+
 
 app.get('/', function(req, res) {
   res.setHeader('Content-Type', 'text/plain')
@@ -187,6 +189,11 @@ app.get('/listconnectedboards', function(req, res) {
     })
   }
 })
+
+///////////////////////// STARTUP ////////////////////
+
+console.clear()
+log('Starting arduino-cli-server on http://localhost:' + serverport)
 
 
 // start server
