@@ -66,6 +66,17 @@ const arduino_cli = arduino_cli_wrapper(arduino_cli_binary, {
   sketchbook_path: sketchbook_path
 })
 
+
+function arduino_cli(command_line) {
+  return child_process.execSync(arduino_cli_binary, command_line)
+}
+
+command_line = ["board", "list", "--format", "json"]
+process = arduino_cli(command_line)
+log(str(process))
+
+
+
 /*
 // TODO / explore this https://developers.google.com/web/fundamentals/primers/promises#promises_arrive_in_javascript
 var findConnectedBoard = new Promise(function(resolve, reject) {
