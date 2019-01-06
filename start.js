@@ -107,6 +107,9 @@ function compileAndUpload(sketchName, code, port, fqbn) {
   fs.writeFileSync(sketchFilename, code)
   log('Sketch created');
 
+  if (fqbn == 'auto') fqbn = detected_fqbn
+  if (port == 'auto') port = detected_port
+
   result = arduino_cli(["compile", "--fqbn", fqbn, sketchPath])
   log('Sketch compiled');
 
