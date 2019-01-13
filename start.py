@@ -6,12 +6,18 @@ from bottle import WSGIRefServer, route, run, template, request, post, get, stat
 import subprocess
 import sys
 import os
+import platform
 import json
-import guizero
 import threading
 
 
 DEBUG = True
+
+# init arduino_cli path
+if platform.system == 'Windows':
+    arduino_cli_path = os.path.join(os.path.curdir, 'arduino-cli', 'arduino-cli.exe')
+else:
+    arduino_cli_path = os.path.join(os.path.curdir,'arduino-cli', 'arduino-cli')
 
 
 # a few utility functions first
@@ -21,9 +27,6 @@ def log(s):
     if DEBUG:
         print (s)
         print('-------------------')
-        #if console:
-        console.append('-------------------------')
-        console.append(s)
 
 # returns a json formated error message
 def error(message):
@@ -39,45 +42,12 @@ def success(message):
 
 # call the arduino-cli binary and return the process
 def arduino_cli(command_line):
-    return subprocess.run(['./arduino-cli'] + command_line,stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
-
-# server class to allow shutdown of bottle server, see https://stackoverflow.com/questions/11282218/bottle-web-framework-how-to-stop
-class MyServer(WSGIRefServer):
-    def run(self, app): # pragma: no cover
-        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
-        from wsgiref.simple_server import make_server
-        import socket
-
-        class FixedHandler(WSGIRequestHandler):
-            def address_string(self): # Prevent reverse DNS lookups please.
-                return self.client_address[0]
-            def log_request(*args, **kw):
-                if not self.quiet:
-                    return WSGIRequestHandler.log_request(*args, **kw)
-
-        handler_cls = self.options.get('handler_class', FixedHandler)
-        server_cls  = self.options.get('server_class', WSGIServer)
-
-        if ':' in self.host: # Fix wsgiref for IPv6 addresses.
-            if getattr(server_cls, 'address_family') == socket.AF_INET:
-                class server_cls(server_cls):
-                    address_family = socket.AF_INET6
-
-        srv = make_server(self.host, self.port, app, server_cls, handler_cls)
-        self.srv = srv ### THIS IS THE ONLY CHANGE TO THE ORIGINAL CLASS METHOD!
-        srv.serve_forever()
-
-    def shutdown(self): ### ADD SHUTDOWN METHOD.
-        self.srv.shutdown()
-        # self.server.server_close()
+    return subprocess.run([arduino_cli_path] + command_line,stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__)))
 
 @route('/')
 def index():
     return static_file('index.html', './examples/')
 
-@route('/hello/<name>')
-def index(name):
-    return template('<b>Hello {{name}}</b>!', name=name)
 
 @route('/error')
 def index():
@@ -133,7 +103,13 @@ def index():
 
     # Currently we use the first detected port. Needs to be better implemented
     boards = json.loads(board_list_process.stdout)
-    port = (boards['serialBoards'][0]['port'])
+
+    log(boards)
+
+    if len(boards['serialBoards']) > 0 :
+        port = (boards['serialBoards'][0]['port'])
+    else:
+        return error("No board found")
 
 
     upload_process = arduino_cli(['upload', '--port', port, "--fqbn", str(request.forms.get('fqbn')), str(sketch_path)])
@@ -199,42 +175,10 @@ def index():
     return success(process.stdout.decode())
 
 
-
-# experimental catch all
-#@get('/<item>/<action>')
-#def index(item, action):
-#    command_line = [item, action]
-#    process = arduino_cli(command_line)
-#    log (str(process))
-#    if process.returncode != 0:
-#        return error("Error, arduino-cli says : " + str(process.stdout.decode()))
-#    return (process.stdout.decode())
-
 # warn python 3 only
 if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
 
 
-def start_server():
-    log('Starting server')
-    run(server=server)
-
-
-def quit():
-    log('exit')
-    app.destroy()
-    server.shutdown()
-
-
-if __name__ == '__main__':
-    # start the gui
-    app = guizero.App(title="Arduino Blockly Agent")
-    text = guizero.Text(app, text="Console output : ")
-    button = guizero.PushButton(app, command=quit, text="Quit")
-    console = guizero.TextBox(app, width=40, height=10, multiline=True, scrollbar=True)
-
-    # start the server
-    server = MyServer(host="localhost", port=3280, debug=True, reloader=False)
-    threading.Thread(target=start_server).start()
-    app.display()
+run(host='localhost', port=3280, reloader=True)
