@@ -19,6 +19,11 @@ if platform.system == 'Windows':
 else:
     arduino_cli_path = os.path.join(os.path.curdir,'arduino-cli', 'arduino-cli')
 
+# check the binary exists
+if not os.path.isfile(arduino_cli_path):
+    raise Exception("Arduino-cli not found in " + arduino_cli_path + " . Please check readme for instructions")
+
+
 
 # a few utility functions first
 
