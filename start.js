@@ -33,7 +33,7 @@ function debug(message) {
 // use the following to report an error
 function error(message, details) {
   console.error('---ERROR : ' + message)
-  console.error('Details : ' + details)
+  if (details) console.error('Details : ' + details)
   console.error('')
 }
 
@@ -199,7 +199,15 @@ console.clear()
 log('Starting arduino-cli-server on http://localhost:' + serverport)
 
 
+
+if (!fs.existsSync(arduino_cli_binary)) {
+  error('Arduino cli not found',  'Please check readme for installation instructions')
+}
+
+
+
 // start server
+// todo use https://www.npmjs.com/package/portscanner
 app.listen(serverport)
 
 
