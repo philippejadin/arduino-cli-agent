@@ -1,0 +1,3 @@
+- Download arduino_cli from https://github.com/arduino/arduino-cli/releases
+- Unzip it and put it in this directory.
+- You should have arduino-cli/arduino-cli on linux or arduino-cli/arduino-cli.exe on windows
