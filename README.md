@@ -3,9 +3,10 @@ A simple server to allow local compilation and upload of sketches, using arduino
 
 # Install
 
-You need to download the arduino-cli binary for your platform (currently only tested on linux) from here: https://github.com/arduino/arduino-cli/
+- Download arduino_cli for your platform from https://github.com/arduino/arduino-cli/releases
+- Unzip it and put it in the arduino-cli directory.
+- You should have arduino-cli/arduino-cli on linux or arduino-cli/arduino-cli.exe on windows
 
-Then rename it to arduino-cli and put it in the same directory as start.py
 
 # Usage
 Run python3 start.py

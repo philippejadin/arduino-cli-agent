@@ -1,8 +1,6 @@
 build
 dist
 *.spec
-arduino-cli
-arduino-cli.exe
 *.pyc
 __pycache__
 node_modules
