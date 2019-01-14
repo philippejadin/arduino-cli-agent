@@ -11,6 +11,7 @@ const fs = require('fs')
 const path = require('path');
 const child_process = require('child_process')
 const chalk = require('chalk'); // colorize console text
+var mkdirp = require('mkdirp'); // recursively create dirs
 
 const app = express()
 
@@ -106,7 +107,7 @@ function compileAndUpload(filename, code, port, fqbn) {
   sketchPath = path.join(process.cwd(), 'sketches', filename, path.sep)
 
   if (!fs.existsSync(sketchPath)) {
-    fs.mkdirSync(sketchPath);
+    mkdirp.sync(sketchPath)
   }
 
   sketchFilename = sketchPath + filename + '.ino'
