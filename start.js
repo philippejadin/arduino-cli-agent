@@ -13,7 +13,9 @@ const child_process = require('child_process')
 const chalk = require('chalk') // colorize console text
 const mkdirp = require('mkdirp') // recursively create dirs
 const wget = require('node-wget')
-const unzipper = require('unzipper')
+const decompress = require('decompress');
+const decompressUnzip = require('decompress-unzip');
+const decompressTarbz = require('decompress-tarbz2');
 
 const app = express()
 
@@ -245,15 +247,14 @@ log('Starting arduino-cli-server on http://localhost:' + serverport)
 
 
 
-// initialize arduino cli
+// initialize arduino cli path
 if (process.platform === "win32") {
   arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli-0.3.3-alpha.preview-windows.exe')
 } else {
-  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli')
+  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli-0.3.3-alpha.preview-linux64')
 }
 
-// download arduino cli if not found
-
+// download and unzip  arduino cli if not found
 if (!fs.existsSync(arduino_cli_binary)) {
   log('Arduino cli not found : I will try to download it for you')
 
@@ -267,11 +268,35 @@ if (!fs.existsSync(arduino_cli_binary)) {
         if (error) {
           error(error); // error encountered
         } else {
-          fs.createReadStream(path.join(process.cwd(), 'arduino-cli', 'arduino-cli.zip'))
-            .pipe(unzipper.Extract({
-              path: path.join(process.cwd(), 'arduino-cli')
-            }));
-          log('Arduino-cli installed');
+          decompress(path.join(process.cwd(), 'arduino-cli', 'arduino-cli.zip'), path.join(process.cwd(), 'arduino-cli'), {
+            plugins: [
+              decompressUnzip()
+            ]
+          }).then(() => {
+            log('Arduino-cli installed');
+          });
+        }
+      }
+    );
+  }
+
+  if (process.platform === "win32") {
+    wget({
+        url: 'https://github.com/arduino/arduino-cli/releases/download/0.3.3-alpha.preview/arduino-cli-0.3.3-alpha.preview-linux64.tar.bz2',
+        dest: path.join(process.cwd(), 'arduino-cli', 'arduino-cli.tar.bz2')
+
+      },
+      function(error, response, body) {
+        if (error) {
+          error(error); // error encountered
+        } else {
+          decompress(path.join(process.cwd(), 'arduino-cli', 'arduino-cli.tar.bz2'), path.join(process.cwd(), 'arduino-cli'), {
+            plugins: [
+              decompressTarbz()
+            ]
+          }).then(() => {
+            log('Arduino-cli installed');
+          });
         }
       }
     );
