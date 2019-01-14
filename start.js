@@ -11,7 +11,7 @@ const app = express()
 ///////////////////////// CONFIG  ////////////////////
 
 
-serverport = 3280
+serverport = 8080
 detected_port = false
 detected_fqbn = false
 
@@ -80,9 +80,7 @@ function findConnectedBoard() {
     log('More than one board found, will use the first found in automatic mode');
   }
 
-
   return result
-
 }
 
 
@@ -130,19 +128,31 @@ app.use(bodyParser.urlencoded({
 
 
 app.get('/', function(req, res) {
-  res.setHeader('Content-Type', 'text/plain')
-  res.send('welcome to arduino-cli-server')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.json({
+    'message': 'Welcome to arduino-cli-server'
+  })
 })
 
 
 app.get('/compile', function(req, res) {
-  res.setHeader('Content-Type', 'application/json')
+  res.setHeader('Access-Control-Allow-Origin', '*')
   res.json({
     'error': true,
     'message': 'use a post request'
   })
 })
 
+
+
+app.get('/version', function(req, res) {
+  //res.setHeader('Content-Type', 'application/json')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.json({
+    'error': false,
+    'version': '0.1'
+  })
+})
 
 app.post('/compile', function(req, res) {
   // todo validate !!!
@@ -151,10 +161,10 @@ app.post('/compile', function(req, res) {
   port = req.body.port || detected_port
   fqbn = req.body.fqbn || detected_fqbn
 
+  res.setHeader('Access-Control-Allow-Origin', '*')
+
   try {
     result = compileAndUpload(sketchName, code, port, fqbn)
-
-    res.setHeader('Content-Type', 'application/json')
     res.json({
       'error': false,
       'details': result
@@ -175,14 +185,15 @@ app.post('/compile', function(req, res) {
 
 
 
-app.get('/listconnectedboards', function(req, res) {
+app.get('/connectedboards', function(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*') // TODO security issue
   result = findConnectedBoard()
-  if (result.length > 0) {
-    res.setHeader('Content-Type', 'application/json')
+
+  if (result.serialBoards.length > 0) {
     res.json({
       'error': false,
-      'count': result.length,
-      'boards': result
+      'count': result.serialBoards.length,
+      'boards': result.serialBoards
     })
   } else {
     res.json({
@@ -193,7 +204,7 @@ app.get('/listconnectedboards', function(req, res) {
   }
 })
 
-///////////////////////// STARTUP ////////////////////
+///////////////////////// STARTUP & init ////////////////////
 
 console.clear()
 log('Starting arduino-cli-server on http://localhost:' + serverport)
@@ -201,7 +212,7 @@ log('Starting arduino-cli-server on http://localhost:' + serverport)
 
 
 if (!fs.existsSync(arduino_cli_binary)) {
-  error('Arduino cli not found',  'Please check readme for installation instructions')
+  error('Arduino cli not found : please check readme for installation instructions')
 }
 
 

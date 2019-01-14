@@ -5,7 +5,7 @@
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-<script src="uploader.js"></script>
+
 
 
 <style>
@@ -17,33 +17,34 @@ padding-top: 1em;
 
 <body>
   <div class="container">
-    <h1>Compile and upload to arduino : example</h1>
+    <h1>Compile and upload to arduino : example with a simple html form</h1>
 
     <p>First start the agent then fill the form bellow and watch for the results.
-      This is also the recommended way to integrate agent in your application.
-      This example uses ajax calls to dynamically build the interface and avoid page reloads
+      This is also the recommended way to integrate agent in your application. This example doesn't use ajax.
     </p>
 
 
 
     <div>
-      <select id="uploader_ports" name="port">
-        <option value="auto">Autodetect</option>
-      </select>
-      <select id="uploader_boards" name="fqbn">
-        <option value="auto">Autodetect</option>
-      </select>
-      <button id="uploader_list" class='btn btn-secondary'>Detect connected board</button>
-      <button id="uploader_flash" class='btn btn-primary'>Upload to arduino</button>
-    </div>
 
-    <div>
-      Sketch name : <br />
-      <input type="text" name="filename" value="mysketch" />
-    </div>
-    <div>
-      Sketch content : <br />
-      <textarea name="arduino_code" rows="20" cols="120">
+    <form method="post" action="http://127.0.0.1:8080/compile">
+
+      <div>
+        Port : <br />
+        <input type="text" name="port" value="auto" />
+      </div>
+
+      <div>
+        Board type (aka "Fully qualified board name" : <br />
+        <input type="text" name="fqbn" value="auto" />
+      </div>
+      <div>
+        Sketch name : <br />
+        <input type="text" name="filename" value="mysketch" />
+      </div>
+      <div>
+        Sketch content : <br />
+        <textarea name="arduino_code" rows="20" cols="120">
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -59,8 +60,10 @@ void loop() {
   delay(1000);                       // wait for a second
 }
 </textarea>
-    </div>
-
+      </div>
+      <div>
+        <input type="submit" value="Compile and upload" />
+      </div>
     </form>
 
   </div>
