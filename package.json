@@ -14,7 +14,8 @@
     "chalk": "^2.4.2",
     "express": "^4.16.4",
     "mkdirp": "^0.5.1",
-    "node-wget": "^0.4.3"
+    "node-wget": "^0.4.3",
+    "unzipper": "^0.9.7"
   },
   "devDependencies": {},
   "repository": {

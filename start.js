@@ -8,10 +8,12 @@ const express = require('express') // web server
 const bodyParser = require('body-parser') // parse html forms
 const os = require('os')
 const fs = require('fs')
-const path = require('path');
+const path = require('path')
 const child_process = require('child_process')
-const chalk = require('chalk'); // colorize console text
-var mkdirp = require('mkdirp'); // recursively create dirs
+const chalk = require('chalk') // colorize console text
+const mkdirp = require('mkdirp') // recursively create dirs
+const wget = require('node-wget')
+const unzipper = require('unzipper')
 
 const app = express()
 
@@ -49,14 +51,6 @@ function error(message, details) {
 
 ////////////////// ARDUINO-CLI FUNCTIONS / COMMUNICATION ///////////////
 
-// initialize arduino cli
-if (process.platform === "win32") {
-  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli.exe')
-} else {
-  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli')
-}
-
-// TODO download arduino cli if not found
 
 
 // Those folders are the default for arduino IDE so boards, libraries and sketches are synced with arduino ide
@@ -251,8 +245,37 @@ log('Starting arduino-cli-server on http://localhost:' + serverport)
 
 
 
+// initialize arduino cli
+if (process.platform === "win32") {
+  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli-0.3.3-alpha.preview-windows.exe')
+} else {
+  arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli')
+}
+
+// download arduino cli if not found
+
 if (!fs.existsSync(arduino_cli_binary)) {
-  error('Arduino cli not found : please check readme for installation instructions')
+  log('Arduino cli not found : I will try to download it for you')
+
+  if (process.platform === "win32") {
+    wget({
+        url: 'https://github.com/arduino/arduino-cli/releases/download/0.3.3-alpha.preview/arduino-cli-0.3.3-alpha.preview-windows.zip',
+        dest: path.join(process.cwd(), 'arduino-cli', 'arduino-cli.zip')
+
+      },
+      function(error, response, body) {
+        if (error) {
+          error(error); // error encountered
+        } else {
+          fs.createReadStream(path.join(process.cwd(), 'arduino-cli', 'arduino-cli.zip'))
+            .pipe(unzipper.Extract({
+              path: path.join(process.cwd(), 'arduino-cli')
+            }));
+          log('Arduino-cli installed');
+        }
+      }
+    );
+  }
 }
 
 
