@@ -9,7 +9,6 @@
     "build-mac": "pkg -t node8-macos --out-path dist/mac start.js"
   },
   "dependencies": {
-    "arduino-cli": "^0.26.0",
     "body-parser": "^1.18.3",
     "chalk": "^2.4.2",
     "decompress": "^4.2.0",

@@ -250,9 +250,12 @@ log('Starting arduino-cli-server on http://localhost:' + serverport)
 // initialize arduino cli path
 if (process.platform === "win32") {
   arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli-0.3.3-alpha.preview-windows.exe')
-} else {
+}
+if (process.platform === "linux") {
   arduino_cli_binary = path.join(process.cwd(), 'arduino-cli', 'arduino-cli-0.3.3-alpha.preview-linux64')
 }
+
+// TODO mac support
 
 // download and unzip  arduino cli if not found
 if (!fs.existsSync(arduino_cli_binary)) {
@@ -272,7 +275,7 @@ if (!fs.existsSync(arduino_cli_binary)) {
             plugins: [
               decompressUnzip()
             ]
-          }).then(() => {
+          }).then(function (){
             log('Arduino-cli installed');
           });
         }
@@ -280,7 +283,7 @@ if (!fs.existsSync(arduino_cli_binary)) {
     );
   }
 
-  if (process.platform === "win32") {
+  if (process.platform === "linux") {
     wget({
         url: 'https://github.com/arduino/arduino-cli/releases/download/0.3.3-alpha.preview/arduino-cli-0.3.3-alpha.preview-linux64.tar.bz2',
         dest: path.join(process.cwd(), 'arduino-cli', 'arduino-cli.tar.bz2')
@@ -294,7 +297,7 @@ if (!fs.existsSync(arduino_cli_binary)) {
             plugins: [
               decompressTarbz()
             ]
-          }).then(() => {
+          }).then(function () {
             log('Arduino-cli installed');
           });
         }
