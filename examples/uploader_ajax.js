@@ -18,8 +18,8 @@ $(document).ready(function() {
           } else {
             $('#uploader_list').text(data['count'] + ' board found')
 
-            $('#uploader_boards option').remove()
-            $('#uploader_ports option').remove()
+            $('#fqbn option').remove()
+            $('#ports option').remove()
 
             data.boards.forEach(function(board) {
               $('#uploader_boards').append('<option value="' + board.fqbn + '">' + board.name + '</option>').change()
