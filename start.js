@@ -155,29 +155,60 @@ app.get('/version', function(req, res) {
 })
 
 app.post('/compile', function(req, res) {
-  // todo validate !!!
-  sketchName = req.body.filename
-  code = req.body.arduino_code
-  port = req.body.port || detected_port
-  fqbn = req.body.fqbn || detected_fqbn
 
   res.setHeader('Access-Control-Allow-Origin', '*')
 
+  // todo validate !!!
+  filename = req.body.filename
+  code = req.body.code
+  port = req.body.port || detected_port
+  fqbn = req.body.fqbn || detected_fqbn
+
+  if (!req.body.code) {
+    error('No code set in request')
+    res.json({
+      'error': true,
+      'details': 'No code set in request'
+    })
+  }
+
+  if (!req.body.port) {
+    error('No port set in request')
+    res.json({
+      'error': true,
+      'details': 'No port set in request'
+    })
+  }
+
+  if (!req.body.fqbn) {
+    error('No fqbn set in request')
+    res.json({
+      'error': true,
+      'details': 'No fqbn set in request'
+    })
+  }
+
+  if (!req.body.filename) {
+    error('No filename set in request')
+    res.status(400).json({
+      'error': true,
+      'details': 'No filename set in request'
+    })
+  }
+
   try {
-    result = compileAndUpload(sketchName, code, port, fqbn)
+    result = compileAndUpload(filename, code, port, fqbn)
     res.json({
       'error': false,
       'details': result
     })
   } catch (err) {
-    res.setHeader('Content-Type', 'application/json')
     res.json({
       'error': true,
       'details': err.toString()
     })
     log(err.toString())
   }
-
 })
 
 

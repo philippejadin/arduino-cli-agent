@@ -1,14 +1,14 @@
+/*
+Sample code to use arduino-cli-agent with jquery / ajax
+Check the related uploader_ajax.html file for tha markup.
+*/
+
 $(document).ready(function() {
   $("#uploader_list").click(function() {
 
     $('#uploader_list').text('Searching...');
     $.ajax({
         url: 'http://127.0.0.1:8080/connectedboards',
-        /*
-        data: {
-          id: 'some-unique-id'
-        }
-        */
       })
       .then(
         function success(data) {
@@ -38,7 +38,6 @@ $(document).ready(function() {
 })
 
 
-
 $(document).ready(function() {
   $("#uploader_flash").click(function() {
 
@@ -47,9 +46,9 @@ $(document).ready(function() {
         url: 'http://127.0.0.1:8080/compile',
         method: 'post',
         data: {
-          fqbn: $("#uploader_boards").val(),
-          port: $("#uploader_ports").val(),
-          arduino_code: $("#arduino_code").val(),
+          fqbn: $("#fqbn").val(),
+          port: $("#port").val(),
+          code: $("#code").val(),
           filename: $("#filename").val()
         }
 
@@ -57,16 +56,24 @@ $(document).ready(function() {
       .then(
         function success(data) {
           console.log(data)
-          $('#uploader_flash').text('Success!')
-          setTimeout(function() {
-            $('#uploader_flash').text('Upload to arduino')
+          if (data.error) {
+            $('#uploader_flash').text('Failed!')
+            setTimeout(function() {
+              $('#uploader_flash').text('Upload to arduino')
+            }, 2000);
+            alert(data.details)
 
-          }, 2000);
+          } else {
+            $('#uploader_flash').text('Success!')
+            setTimeout(function() {
+              $('#uploader_flash').text('Upload to arduino')
+            }, 2000);
+          }
         },
-
         function fail(data, status) {
+          $('#uploader_flash').text('Failed!')
           alert('Error ' + status)
-          console.error(status);
+          console.error(data);
         }
       )
   })

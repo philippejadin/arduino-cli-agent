@@ -27,10 +27,10 @@ padding-top: 1em;
 
 
     <div>
-      <select id="uploader_ports" name="port">
+      <select id="port" name="port">
         <option value="auto">Port : autodetect</option>
       </select>
-      <select id="uploader_boards" name="fqbn">
+      <select id="fqbn" name="fqbn">
         <option value="auto">Board : autodetect</option>
       </select>
       <button id="uploader_list" class='btn btn-secondary'>Detect connected board</button>
@@ -43,7 +43,7 @@ padding-top: 1em;
     </div>
     <div>
       Sketch content : <br />
-      <textarea name="arduino_code" rows="20" cols="120" id="arduino_code">
+      <textarea name="code" rows="20" cols="120" id="code">
 
 // the setup function runs once when you press reset or power the board
 void setup() {
