@@ -4,9 +4,9 @@ Check the related uploader_ajax.html file for tha markup.
 */
 
 $(document).ready(function() {
-  $("#uploader_list").click(function() {
+  $("#detect_button").click(function() {
 
-    $('#uploader_list').text('Searching...');
+    $('#detect_button').text('Searching...');
     $.ajax({
         url: 'http://127.0.0.1:8080/connectedboards',
       })
@@ -14,16 +14,16 @@ $(document).ready(function() {
         function success(data) {
           console.log(data)
           if (data['count'] == 0) {
-            $('#uploader_list').text('No board found, click to retry')
+            $('#detect_button').text('No board found, click to retry')
           } else {
-            $('#uploader_list').text(data['count'] + ' board found')
+            $('#detect_button').text(data['count'] + ' board found')
 
             $('#fqbn option').remove()
             $('#ports option').remove()
 
             data.boards.forEach(function(board) {
-              $('#uploader_boards').append('<option value="' + board.fqbn + '">' + board.name + '</option>').change()
-              $('#uploader_ports').append('<option value="' + board.port + '">' + board.port + '</option>').change()
+              $('#fqbn').append('<option value="' + board.fqbn + '">' + board.name + '</option>').change()
+              $('#port').append('<option value="' + board.port + '">' + board.port + '</option>').change()
             });
           }
 
@@ -39,9 +39,9 @@ $(document).ready(function() {
 
 
 $(document).ready(function() {
-  $("#uploader_flash").click(function() {
+  $("#flash_button").click(function() {
 
-    $('#uploader_flash').text('Wait...')
+    $('#flash_button').text('Wait...')
     $.ajax({
         url: 'http://127.0.0.1:8080/compile',
         method: 'post',
@@ -57,21 +57,21 @@ $(document).ready(function() {
         function success(data) {
           console.log(data)
           if (data.error) {
-            $('#uploader_flash').text('Failed!')
+            $('#flash_button').text('Failed!')
             setTimeout(function() {
-              $('#uploader_flash').text('Upload to arduino')
+              $('#flash_button').text('Upload to arduino')
             }, 2000);
             alert(data.details)
 
           } else {
-            $('#uploader_flash').text('Success!')
+            $('#flash_button').text('Success!')
             setTimeout(function() {
-              $('#uploader_flash').text('Upload to arduino')
+              $('#flash_button').text('Upload to arduino')
             }, 2000);
           }
         },
         function fail(data, status) {
-          $('#uploader_flash').text('Failed!')
+          $('#flash_button').text('Failed!')
           alert('Error ' + status)
           console.error(data);
         }
