@@ -4,12 +4,14 @@
   "description": "A simple server to allow local compilation and upload of sketches, using arduino-cli called from python",
   "main": "start.js",
   "scripts": {
-    "start" : "node start.js"
+    "build-linux": "pkg -t node8-linux-x64 --out-path dist/linux start.js",
+    "build-windows": "pkg -t node8-win --out-path dist/windows start.js",
+    "build-mac": "pkg -t node8-macos --out-path dist/mac start.js"
   },
-
   "dependencies": {
     "arduino-cli": "^0.26.0",
     "body-parser": "^1.18.3",
+    "chalk": "^2.4.2",
     "express": "^4.16.4",
     "node-wget": "^0.4.3"
   },
@@ -17,11 +19,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/philippejadin/arduino-cli-agent.git"
-  },
-  "scripts": {
-    "build-linux": "pkg -t node8-linux-x64 --out-path dist/linux start.js",
-    "build-windows": "pkg -t node8-win --out-path dist/windows start.js",
-    "build-mac": "pkg -t node8-macos --out-path dist/mac start.js"
   },
   "author": "",
   "license": "GPL",

@@ -1,9 +1,16 @@
+/******************* ARDUINO-CLI-AGENT ***********************/
+//
+// A nodejs wrapper around arduino cli, to allow it's use from a browser.
+// https://github.com/philippejadin/arduino-cli-agent/
+//
+
 const express = require('express') // web server
 const bodyParser = require('body-parser') // parse html forms
 const os = require('os')
 const fs = require('fs')
 const path = require('path');
 const child_process = require('child_process')
+const chalk = require('chalk'); // colorize console text
 
 const app = express()
 
@@ -32,7 +39,8 @@ function debug(message) {
 
 // use the following to report an error
 function error(message, details) {
-  console.error('---ERROR : ' + message)
+  console.error(chalk.red('---ERROR ---'))
+  console.error(chalk.red(message))
   if (details) console.error('Details : ' + details)
   console.error('')
 }
@@ -89,21 +97,21 @@ function findConnectedBoard() {
 // this does the heavy duty
 // port and fqbn can be set as 'auto',
 // in this case the tool will try to guess from the first connected board, yeah!
-function compileAndUpload(sketchName, code, port, fqbn) {
+function compileAndUpload(filename, code, port, fqbn) {
 
   // create sketch would be like this if using cli :
   //result = arduino_cli(["sketch", "new", sketchName])
   // but let's just create it inside our own ./sketches directory for now
 
-  sketchPath = path.join(__dirname, 'sketches', sketchName, path.sep)
+  sketchPath = path.join(process.cwd(), 'sketches', filename, path.sep)
 
   if (!fs.existsSync(sketchPath)) {
     fs.mkdirSync(sketchPath);
   }
 
-  sketchFilename = sketchPath + sketchName + '.ino'
+  sketchFilename = sketchPath + filename + '.ino'
   fs.writeFileSync(sketchFilename, code)
-  log('Sketch created');
+  log('Sketch created in ' + sketchPath);
 
   if (fqbn == 'auto') fqbn = detected_fqbn
   if (port == 'auto') port = detected_port
@@ -207,7 +215,7 @@ app.post('/compile', function(req, res) {
       'error': true,
       'details': err.toString()
     })
-    log(err.toString())
+    error(err.toString())
   }
 })
 
