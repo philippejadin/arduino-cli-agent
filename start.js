@@ -152,7 +152,8 @@ app.get('/version', function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.json({
     'error': false,
-    'version': '0.1'
+    'version': '0.1',
+    'arduino-cli': arduino_cli(['version'])
   })
 })
 
