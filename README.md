@@ -1,7 +1,14 @@
 # arduino-cli-agent
 A simple server to allow local compilation and upload of sketches, using arduino-cli called from nodejs
 
-# Install
+# Usage for end users
+- Download the latest release for your platform
+- Unzip it somewhere
+- Start the provided executable (start.exe on Windows)
+
+Curently only windows binaries are provided. If you are on another platform, see below
+
+# For developers
 - Install nodejs for your platform (curently tested with node v8 lastest, but there is no reason it would not work with other version)
 - Run `npm install` to install dependencies
 - Download arduino_cli for your platform from https://github.com/arduino/arduino-cli/releases
